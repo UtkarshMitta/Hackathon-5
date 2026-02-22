@@ -437,7 +437,7 @@ function executeSearchFieldNotes(data: any, projectId: string, keywords: string[
   const matches = notes
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .map((note: any) => {
-      const contentLower = (note.content || '').toLowerCase();
+      const contentLower = String(note.content ?? '').toLowerCase();
       const matchedKeywords = keywords.filter((kw) => contentLower.includes(kw.toLowerCase()));
       if (matchedKeywords.length === 0) return null;
       return { note_id: note.note_id, date: note.date, author: note.author, note_type: note.note_type, content: note.content, matched_keywords: matchedKeywords };
