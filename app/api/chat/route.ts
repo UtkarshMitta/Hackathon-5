@@ -1,4 +1,5 @@
 import { streamText } from 'ai';
+import { google } from '@ai-sdk/google';
 import { z } from 'zod';
 import { getData } from '@/lib/data-loader';
 import { SYSTEM_PROMPT } from '@/lib/system-prompt';
@@ -19,7 +20,7 @@ export async function POST(req: Request) {
   const data = getData();
 
   const result = streamText({
-    model: 'google/gemini-2.5-flash-preview-04-17',
+    model: google('gemini-2.5-flash-preview-04-17'),
     system: SYSTEM_PROMPT,
     messages,
     maxSteps: 15,
