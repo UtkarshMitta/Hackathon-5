@@ -4,6 +4,9 @@ import { useState, useRef, useEffect, useCallback, FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, Shield, AlertTriangle } from 'lucide-react';
+import { ToolCallCard } from '@/components/tool-call-card';
+import { MarkdownRenderer } from '@/components/markdown-renderer';
+import { parseMessageBlocks } from '@/lib/parse-message';
 
 interface ChatMessage {
   id: string;
@@ -44,7 +47,6 @@ export function Chat() {
     setInput('');
     setIsLoading(true);
 
-    // Build message history for API
     const apiMessages = updatedMessages.map((m) => ({ role: m.role, content: m.content }));
 
     try {
@@ -75,7 +77,6 @@ export function Chat() {
         const chunk = decoder.decode(value, { stream: true });
         accumulated += chunk;
 
-        // Update the assistant message in real-time
         setMessages((prev) => {
           const copy = [...prev];
           const last = copy[copy.length - 1];
@@ -86,7 +87,6 @@ export function Chat() {
         });
       }
 
-      // If accumulated is empty, show a fallback
       if (!accumulated.trim()) {
         setMessages((prev) => {
           const copy = [...prev];
@@ -101,7 +101,6 @@ export function Chat() {
       if (err instanceof DOMException && err.name === 'AbortError') return;
       const msg = err instanceof Error ? err.message : String(err);
       setError(msg);
-      // Remove the empty assistant message
       setMessages((prev) => prev.filter((m) => m.id !== assistantMsg.id));
     } finally {
       setIsLoading(false);
@@ -112,10 +111,6 @@ export function Chat() {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     sendMessage(input);
-  };
-
-  const handleSuggestionClick = (prompt: string) => {
-    sendMessage(prompt);
   };
 
   return (
@@ -130,7 +125,7 @@ export function Chat() {
               <h2 className="mb-2 text-2xl font-semibold text-foreground">
                 MarginGuard AI Agent
               </h2>
-              <p className="mb-8 max-w-md text-center text-muted-foreground">
+              <p className="mb-8 max-w-md text-center text-muted-foreground leading-relaxed">
                 I autonomously scan your HVAC project portfolio, investigate margin risks,
                 and deliver specific recovery actions with dollar estimates.
               </p>
@@ -138,8 +133,8 @@ export function Chat() {
                 {SUGGESTED_PROMPTS.map((prompt, i) => (
                   <button
                     key={i}
-                    onClick={() => handleSuggestionClick(prompt)}
-                    className="rounded-lg border border-border bg-card px-4 py-3 text-left text-sm text-card-foreground transition-colors hover:bg-accent"
+                    onClick={() => sendMessage(prompt)}
+                    className="rounded-lg border border-border bg-card px-4 py-3 text-left text-sm text-card-foreground transition-colors hover:bg-accent/20 hover:border-primary/30"
                   >
                     {prompt}
                   </button>
@@ -148,42 +143,31 @@ export function Chat() {
             </div>
           ) : (
             messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
-                    message.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-card text-card-foreground border border-border'
-                  }`}
-                >
-                  {message.content || (isLoading && message.role === 'assistant' ? '' : message.content)}
-                  {isLoading && message.role === 'assistant' && message === messages[messages.length - 1] && !message.content && (
-                    <span className="inline-flex gap-1">
-                      <span className="h-2 w-2 animate-bounce rounded-full bg-primary" style={{ animationDelay: '0ms' }} />
-                      <span className="h-2 w-2 animate-bounce rounded-full bg-primary" style={{ animationDelay: '150ms' }} />
-                      <span className="h-2 w-2 animate-bounce rounded-full bg-primary" style={{ animationDelay: '300ms' }} />
-                    </span>
-                  )}
-                </div>
+              <div key={message.id}>
+                {message.role === 'user' ? (
+                  <div className="flex justify-end">
+                    <div className="max-w-[80%] rounded-2xl bg-primary px-4 py-3 text-sm leading-relaxed text-primary-foreground">
+                      {message.content}
+                    </div>
+                  </div>
+                ) : (
+                  <AssistantMessage
+                    content={message.content}
+                    isStreaming={isLoading && message === messages[messages.length - 1]}
+                  />
+                )}
               </div>
             ))
           )}
 
-          {/* Error display */}
           {error && (
             <div className="mx-auto max-w-lg rounded-lg border border-destructive/50 bg-destructive/10 p-4">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-destructive" />
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
                 <div>
                   <p className="font-medium text-destructive">Something went wrong</p>
                   <p className="mt-1 text-sm text-muted-foreground">{error}</p>
-                  <button
-                    onClick={() => setError(null)}
-                    className="mt-2 text-sm font-medium text-primary hover:underline"
-                  >
+                  <button onClick={() => setError(null)} className="mt-2 text-sm font-medium text-primary hover:underline">
                     Dismiss
                   </button>
                 </div>
@@ -202,15 +186,72 @@ export function Chat() {
             className="flex-1"
             disabled={isLoading}
           />
-          <Button
-            type="submit"
-            disabled={isLoading || !input.trim()}
-            size="icon"
-          >
+          <Button type="submit" disabled={isLoading || !input.trim()} size="icon">
             <Send className="h-4 w-4" />
           </Button>
         </form>
       </div>
+    </div>
+  );
+}
+
+/** Renders assistant messages with parsed tool calls and rich markdown */
+function AssistantMessage({ content, isStreaming }: { content: string; isStreaming: boolean }) {
+  if (!content && isStreaming) {
+    return (
+      <div className="flex items-center gap-2 py-3 text-sm text-muted-foreground">
+        <div className="flex gap-1">
+          <span className="h-2 w-2 animate-bounce rounded-full bg-primary" style={{ animationDelay: '0ms' }} />
+          <span className="h-2 w-2 animate-bounce rounded-full bg-primary" style={{ animationDelay: '150ms' }} />
+          <span className="h-2 w-2 animate-bounce rounded-full bg-primary" style={{ animationDelay: '300ms' }} />
+        </div>
+        Agent is thinking...
+      </div>
+    );
+  }
+
+  const blocks = parseMessageBlocks(content);
+
+  // Group consecutive tool calls together
+  const grouped: Array<
+    | { type: 'tool-group'; tools: Array<{ toolName: string; isLast: boolean }> }
+    | { type: 'content'; text: string }
+  > = [];
+
+  for (const block of blocks) {
+    if (block.type === 'tool-call') {
+      const last = grouped[grouped.length - 1];
+      if (last && last.type === 'tool-group') {
+        last.tools.push({ toolName: block.toolName, isLast: block.isLast });
+      } else {
+        grouped.push({ type: 'tool-group', tools: [{ toolName: block.toolName, isLast: block.isLast }] });
+      }
+    } else {
+      grouped.push({ type: 'content', text: block.text });
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      {grouped.map((group, gi) => {
+        if (group.type === 'tool-group') {
+          return (
+            <div key={gi} className="space-y-1">
+              {group.tools.map((tool, ti) => (
+                <ToolCallCard key={ti} toolName={tool.toolName} isActive={tool.isLast && isStreaming} />
+              ))}
+            </div>
+          );
+        }
+        return (
+          <div key={gi} className="rounded-2xl border border-border bg-card px-5 py-4">
+            <MarkdownRenderer content={group.text} />
+            {isStreaming && gi === grouped.length - 1 && (
+              <span className="typing-cursor" />
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
