@@ -1,0 +1,9 @@
+{
+  "functions": {
+    "app/api/chat/route.ts": {
+      "includeFiles": "data/**",
+      "includeFiles": "hvac_construction_dataset/**",
+      "maxDuration": 300
+    }
+  }
+}
