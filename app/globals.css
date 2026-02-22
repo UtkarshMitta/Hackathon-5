@@ -80,5 +80,5 @@
 .typing-cursor::after {
   content: '▋';
   animation: blink 1s infinite;
-  color: rgb(16 185 129);
+  color: hsl(var(--primary));
 }

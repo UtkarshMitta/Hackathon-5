@@ -88,3 +88,7 @@ hvac_construction_dataset/  # 10 CSV files (~18K records)
 - PapaParse `dynamicTyping: true` converts numbers automatically
 - All calculations use `round()` and `safeDivide()` for safety
 - Tool returns are JSON - the LLM reasons about them, the UI renders tool cards
+- next.config.mjs has `outputFileTracingIncludes` to bundle CSVs into serverless function
+- No hardcoded colors anywhere - all components use CSS variable theme tokens
+- Tool invocation cards use lucide-react icons instead of emojis
+- message-bubble uses `dark:prose-invert` for theme-aware markdown rendering
