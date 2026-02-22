@@ -452,13 +452,37 @@ function executeSearchFieldNotes(data: any, projectId: string, keywords: string[
 
 async function executeSendEmailReport(to: string, subject: string, htmlBody: string) {
   const webhookUrl = process.env.GAS_EMAIL_WEBHOOK_URL;
-  if (!webhookUrl) return { success: false, message: 'Email webhook URL not configured.' };
+  const defaultRecipient = process.env.ALERT_EMAIL_TO;
+  
+  if (!webhookUrl) {
+    return { 
+      success: false, 
+      message: 'Email system not configured. Set GAS_EMAIL_WEBHOOK_URL environment variable and restart the server.' 
+    };
+  }
+  
+  // Use default recipient if not specified
+  const recipient = to || defaultRecipient || 'team@example.com';
+  
   try {
-    const res = await fetch(webhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to, subject, body: htmlBody }) });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return { success: true, message: `Email sent to ${to}` };
+    const res = await fetch(webhookUrl, { 
+      method: 'POST', 
+      headers: { 'Content-Type': 'application/json' }, 
+      body: JSON.stringify({ to: recipient, subject, body: htmlBody }) 
+    });
+    
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`HTTP ${res.status}: ${errorText}`);
+    }
+    
+    const result = await res.json();
+    return { success: true, message: `Email sent to ${recipient}`, result };
   } catch (error: unknown) {
-    return { success: false, message: `Failed: ${error instanceof Error ? error.message : String(error)}` };
+    return { 
+      success: false, 
+      message: `Email failed: ${error instanceof Error ? error.message : String(error)}. Check that your Google Apps Script is deployed correctly.` 
+    };
   }
 }
 
