@@ -22,10 +22,11 @@ app/
   layout.tsx              # Root layout with ThemeProvider (light/dark)
   page.tsx                # Landing page with Navigation
   agent/page.tsx          # Chat interface page
-  reports/page.tsx        # Reports page (placeholder)
-  vision/page.tsx         # Vision page (placeholder)
+  reports/page.tsx        # Live portfolio reports (fetches /api/reports, project table with risk badges)
+  vision/page.tsx         # Vision / about page
   globals.css             # Theme tokens (blue primary, green accent)
-  api/chat/route.ts       # Full API with all 7 tools implemented
+  api/chat/route.ts       # Full API with all 7 tools (direct Gemini REST)
+  api/reports/route.ts    # Portfolio summary data from CSVs
 
 components/
   navigation.tsx          # Global top nav with theme toggle

@@ -21,19 +21,29 @@ const SUGGESTED_PROMPTS = [
   'Show me unbilled work across all projects',
 ];
 
-export function Chat() {
+export function Chat({ initialPrompt }: { initialPrompt?: string }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const didAutoSend = useRef(false);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // Auto-send initialPrompt from URL query param
+  useEffect(() => {
+    if (initialPrompt && !didAutoSend.current && messages.length === 0) {
+      didAutoSend.current = true;
+      sendMessage(initialPrompt);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialPrompt]);
 
   const sendMessage = useCallback(async (userText: string) => {
     if (!userText.trim() || isLoading) return;

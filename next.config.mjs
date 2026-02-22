@@ -8,6 +8,7 @@ const nextConfig = {
   },
   outputFileTracingIncludes: {
     '/api/chat': ['./hvac_construction_dataset/**/*.csv'],
+    '/api/reports': ['./hvac_construction_dataset/**/*.csv'],
   },
 }
 
