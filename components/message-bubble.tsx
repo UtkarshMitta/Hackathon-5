@@ -1,6 +1,6 @@
 'use client';
 
-import { Message } from 'ai';
+import type { Message } from 'ai';
 import { ToolInvocationCard } from '@/components/tool-invocation';
 import { User, Bot } from 'lucide-react';
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { ToolInvocation } from 'ai';
+import type { ToolInvocation } from 'ai';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
