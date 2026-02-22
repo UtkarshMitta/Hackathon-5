@@ -79,9 +79,9 @@ hvac_construction_dataset/  # 10 CSV files (~18K records)
 
 ## Environment Variables
 
-- `GAS_EMAIL_WEBHOOK_URL` - Google Apps Script webhook for email (optional)
-- `ALERT_EMAIL_TO` - Default email recipient (optional)
-- Vercel AI Gateway handles LLM auth automatically
+- `GOOGLE_GENERATIVE_AI_API_KEY` - Gemini API key for the LLM (required)
+- `GAS_EMAIL_WEBHOOK_URL` - Google Apps Script webhook URL for sending emails (optional, see EMAIL_SETUP_GUIDE.md)
+- `ALERT_EMAIL_TO` - Default email recipient address (optional)
 
 ## Development Notes
 
@@ -93,3 +93,6 @@ hvac_construction_dataset/  # 10 CSV files (~18K records)
 - No hardcoded colors anywhere - all components use CSS variable theme tokens
 - Tool invocation cards use lucide-react icons instead of emojis
 - message-bubble uses `dark:prose-invert` for theme-aware markdown rendering
+- **Email system**: Uses Google Apps Script (GAS) as webhook - see `EMAIL_SETUP_GUIDE.md` for step-by-step setup
+- sendEmailReport tool POSTs JSON `{to, subject, body}` to `GAS_EMAIL_WEBHOOK_URL`
+- GAS script in `scripts/google-apps-script-email.js` sends email via GmailApp (100 emails/day free)
