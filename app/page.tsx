@@ -3,8 +3,6 @@ import { ArrowRight, Home, Wrench, FileText, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function LandingPage() {
-  console.log('[v0] Landing page rendering');
-  
   return (
     <div className="flex h-screen bg-black">
       {/* Left Sidebar */}
@@ -75,15 +73,14 @@ export default function LandingPage() {
               AI analyzes your HVAC portfolio and identifies margin risks in minutes.
             </p>
             
-            <Button 
-              asChild
-              className="bg-white text-black hover:bg-zinc-200 rounded-full h-12 px-8 text-base font-medium"
-            >
-              <Link href="/agent" className="flex items-center gap-2">
+            <Link href="/agent">
+              <Button 
+                className="bg-white text-black hover:bg-zinc-200 rounded-full h-12 px-8 text-base font-medium flex items-center gap-2"
+              >
                 Get the agent — free
                 <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
+              </Button>
+            </Link>
           </div>
 
           {/* Right Content - Phone Mockup */}
