@@ -1,6 +1,9 @@
 import { getData } from '@/lib/data-loader';
 import { laborCost, round, safeDivide } from '@/lib/calculations';
 
+// Route segment config for Vercel
+export const maxDuration = 60;
+
 export async function GET() {
   try {
     const data = getData();

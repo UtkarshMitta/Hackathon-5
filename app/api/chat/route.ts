@@ -1,5 +1,8 @@
 import { getData } from '@/lib/data-loader';
 import { SYSTEM_PROMPT } from '@/lib/system-prompt';
+
+// Route segment config for Vercel
+export const maxDuration = 300; // 5 minutes for agentic loop
 import {
   laborCost,
   overtimePremium,
