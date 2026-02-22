@@ -3,6 +3,8 @@ import { ArrowRight, Home, Wrench, FileText, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function LandingPage() {
+  console.log('[v0] Landing page rendering');
+  
   return (
     <div className="flex h-screen bg-black">
       {/* Left Sidebar */}
