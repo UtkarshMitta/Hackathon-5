@@ -13,8 +13,6 @@ import {
   round,
 } from '@/lib/calculations';
 
-export const maxDuration = 300;
-
 // ── Gemini REST helpers ──
 
 const GEMINI_MODEL = 'gemini-3-flash-preview';
